@@ -937,7 +937,7 @@ if PY3: # http://python3porting.com/problems.html
   def b(x):
     return x.encode('UTF-8') # 'ISO-8859-1')
   def B(x):
-    return x.decode()
+    return x.decode('utf-8', errors='replace')
 else:
   def b(x):
     return x
@@ -1781,6 +1781,7 @@ Please read the README inside for more examples and usage information.
 
       total_size *= size
       iterables.append(iterable)
+      # print( list(iterable()))
 
     if not iterables:
       iterables.append(chain(['']))
@@ -1874,6 +1875,7 @@ Please read the README inside for more examples and usage information.
       payload = self.payload.copy()
 
       for i, (t, _, keys) in self.iter_keys.items():
+        logger.debug('prod[i] = ' + prod[i])
         if t == 'FILE':
           for k in keys:
             payload[k] = payload[k].replace('FILE%d' % i, prod[i])
@@ -1891,7 +1893,10 @@ Please read the README inside for more examples and usage information.
             payload[k] = payload[k].replace('RANGE%d' %i, prod[i])
         elif t == 'PROG':
           for k in keys:
-            payload[k] = payload[k].replace('PROG%d' %i, prod[i])
+            if PY3:
+              payload[k] = payload[k].replace('PROG%d' %i, prod[i][2:-3]) # dirty workaround because prod[i] contains "b'xxx\n'"
+            else:
+              payload[k] = payload[k].replace('PROG%d' %i, prod[i])
 
       for k, m, e in self.enc_keys:
         payload[k] = re.sub(r'{0}(.+?){0}'.format(m), lambda m: e(b(m.group(1))), payload[k])
