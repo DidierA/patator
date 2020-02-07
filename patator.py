@@ -1236,7 +1236,10 @@ class ProgIter:
     self.prog = prog
 
   def __iter__(self):
-    p = subprocess.Popen(self.prog.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if PY3:
+      p = subprocess.Popen(self.prog.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    else:
+      p = subprocess.Popen(self.prog.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return p.stdout
 
 class Progress:
@@ -1893,10 +1896,7 @@ Please read the README inside for more examples and usage information.
             payload[k] = payload[k].replace('RANGE%d' %i, prod[i])
         elif t == 'PROG':
           for k in keys:
-            if PY3:
-              payload[k] = payload[k].replace('PROG%d' %i, prod[i][2:-3]) # dirty workaround because prod[i] contains "b'xxx\n'"
-            else:
-              payload[k] = payload[k].replace('PROG%d' %i, prod[i])
+            payload[k] = payload[k].replace('PROG%d' %i, prod[i])
 
       for k, m, e in self.enc_keys:
         payload[k] = re.sub(r'{0}(.+?){0}'.format(m), lambda m: e(b(m.group(1))), payload[k])
